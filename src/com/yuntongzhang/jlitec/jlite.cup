@@ -1,0 +1,307 @@
+package com.yuntongzhang.jlitec;
+
+import com.yuntongzhang.jlitec.ast.*;
+import java.util.*;
+import java_cup.runtime.Symbol;
+import java_cup.runtime.ComplexSymbolFactory;
+import java_cup.runtime.ComplexSymbolFactory.*;
+
+
+action code {:
+    void check_binaryop(Expression result, Operator operator, Location loc) throws Exception {
+        BinaryOperation binaryOp = (BinaryOperation) result;
+        if (!binaryOp.checkOperands()) {
+            report_fatal_error("One of the operands for the binary operator " + operator.toString() + " is of wrong type.", loc);
+        }
+    }
+
+    void check_unaryop(Expression result, Operator operator, Location loc) throws Exception {
+        UnaryOperation unaryOp = (UnaryOperation) result;
+        if (!unaryOp.checkOperand()) {
+            report_fatal_error("Operand for the unary operator " + operator.toString() + " is of wrong type.", loc);
+        }
+    }
+:};
+
+
+parser code {:
+    Lexer lexer;
+
+    public Parser(Lexer lex, ComplexSymbolFactory symbolFactory) {
+        super(lex, symbolFactory);
+        lexer = lex;
+    }
+
+    public void syntax_error(Symbol cur_token) {
+        return;
+    }
+
+    public void unrecovered_syntax_error(Symbol cur_token) throws Exception {
+        this.report_fatal_error("", cur_token);
+    }
+
+    public void report_fatal_error(String message, Object info) throws Exception {
+        this.done_parsing();
+        this.report_error(message, info);
+        throw new Exception("A parse error occurred!");
+    }
+
+    public void report_fatal_error(String message, Location loc) throws Exception {
+        this.done_parsing();
+        System.out.println("Parse error at " + prettyLocation(loc) + " : " + message);
+        throw new Exception("A parse error occurred!");
+    }
+
+    public void report_error(String message, Object info) {
+        if (info instanceof ComplexSymbol) {
+            ComplexSymbol cs = (ComplexSymbol)info;
+            String header = "Parse error at " + prettyLocation(cs.getLeft()) + " : ";
+            String locInfo = "Parsing reached input symbol \"" + cs.getName() + "\" spanning from " +
+                prettyLocation(cs.getLeft()) + " to " + prettyLocation(cs.getRight());
+            System.out.println(message + header + locInfo);
+        } else {
+            return;
+        }
+    }
+
+    public String prettyLocation(Location loc) {
+        return "<Line " + loc.getLine() + ", Column " + loc.getColumn() + ">";
+    }
+:};
+
+
+/* terminals */
+// keywords
+terminal         CLASS, THIS, NEW, NULL, IF, ELSE, WHILE, MAIN, READLN, PRINTLN, RETURN;
+// binary operators
+terminal         ASSIGN, DOT, OR, AND, LT, GT, LEQ, GEQ, EQ, NEQ, PLUS, MINUS, TIMES, DIV;
+// unary operators
+terminal         NOT, UMINUS;
+// primitive types
+terminal         TYPE_INT, TYPE_BOOL, TYPE_STRING, TYPE_VOID;
+// separators
+terminal         SEMICOLON, COMMA, LPAR, RPAR, LBRACE, RBRACE;
+terminal boolean BOOLEAN_LITERAL;
+terminal int     INTEGER_LITERAL;
+terminal String  STRING_LITERAL;
+terminal String  IDENTIFIER, CNAME;
+
+
+/* nonterminals */
+// _list corresponds to '*', _list_nonempty corresponds to '+'
+nonterminal Program                  program;
+nonterminal MainClass                main_class;
+nonterminal ClassDeclaration         class_decl;
+nonterminal List<ClassDeclaration>   class_decl_list;
+nonterminal FmlItem                  fml_rest;
+nonterminal List<FmlItem>            fml_list, fml_rest_list;
+nonterminal MethodBody               method_body;
+nonterminal VarDeclaration           var_decl;
+nonterminal List<VarDeclaration>     var_decl_list;
+nonterminal MethodDeclaration        method_decl;
+nonterminal List<MethodDeclaration>  method_decl_list;
+nonterminal Type                     type;
+nonterminal Stmt                     stmt;
+nonterminal List<Stmt>               stmt_list, stmt_list_nonempty;
+nonterminal Expression               exp, exp_rest;
+nonterminal List<Expression>         exp_list, exp_rest_list;
+nonterminal Atom                     atom;
+
+
+/* precedence associativity */
+precedence right    ASSIGN;
+precedence left     OR;
+precedence left     AND;
+precedence left     EQ, NEQ;
+precedence nonassoc LT, GT, LEQ, GEQ;
+precedence left     PLUS, MINUS;
+precedence left     TIMES, DIV;
+precedence right    NEW;
+precedence right    UMINUS, NOT;
+precedence left     DOT;
+
+
+/* grammar */
+program ::= main_class:main class_decl_list:clst
+            {: RESULT = new Program(main, clst); :}
+          ;
+
+main_class ::= CLASS CNAME:cname LBRACE TYPE_VOID MAIN LPAR fml_list:flst RPAR method_body:body RBRACE
+               {: RESULT = new MainClass(cname, flst, body); :}
+             ;
+
+class_decl ::= CLASS CNAME:cname LBRACE var_decl_list:vlst method_decl_list:mlst RBRACE
+               {: RESULT = new ClassDeclaration(cname, vlst, mlst); :}
+             ;
+
+class_decl_list ::= class_decl_list:lst class_decl:cdecl
+                    {: lst.add(cdecl); RESULT = lst; :}
+                  | /* epsilon */
+                    {: RESULT = new LinkedList<ClassDeclaration>(); :}
+                  ;
+
+var_decl ::= type:t IDENTIFIER:name SEMICOLON
+             {: RESULT = new VarDeclaration(t, new Identifier(name)); :}
+           ;
+
+var_decl_list ::= var_decl_list:lst var_decl:vdecl
+                  {: lst.add(vdecl); RESULT = lst; :}
+                | /* epsilon */
+                  {: RESULT = new LinkedList<VarDeclaration>(); :}
+                ;
+
+method_decl ::= type:t IDENTIFIER:name LPAR fml_list:flst RPAR method_body:body
+                {: RESULT = new MethodDeclaration(t, new Identifier(name), flst, body); :}
+              ;
+
+method_decl_list ::= method_decl:mdecl method_decl_list:lst
+                     {: lst.add(0, mdecl); RESULT = lst; :}
+                   | /* epsilon */
+                     {: RESULT = new LinkedList<MethodDeclaration>(); :}
+                   ;
+
+method_body ::= LBRACE var_decl_list:vlst stmt_list_nonempty:slst RBRACE
+                {: RESULT = new MethodBody(vlst, slst); :}
+              ;
+
+fml_list ::= type:t IDENTIFIER:name fml_rest_list:lst
+             {: lst.add(0, new FmlItem(t, new Identifier(name))); RESULT = lst; :}
+           | /* epsilon */
+             {: RESULT = new LinkedList<FmlItem>(); :}
+           ;
+
+fml_rest_list ::= fml_rest_list:lst fml_rest:item
+                  {: lst.add(item); RESULT = lst; :}
+                | /* epsilon */
+                  {: RESULT = new LinkedList<FmlItem>(); :}
+                ;
+
+fml_rest ::= COMMA type:t IDENTIFIER:name
+             {: RESULT = new FmlItem(t, new Identifier(name)); :}
+           ;
+
+type ::= TYPE_INT
+         {: RESULT = new Type("Int"); :}
+       | TYPE_BOOL
+         {: RESULT = new Type("Bool"); :}
+       | TYPE_STRING
+         {: RESULT = new Type("String"); :}
+       | TYPE_VOID
+         {: RESULT = new Type("Void"); :}
+       | CNAME:cname
+         {: RESULT = new Type(cname); :}
+       ;
+
+stmt_list_nonempty ::= stmt:s
+                       {: LinkedList<Stmt> lst = new LinkedList<>(); lst.add(s); RESULT = lst; :}
+                     | stmt_list_nonempty:lst stmt:s
+                       {: lst.add(s); RESULT = lst; :}
+                     | error:e
+                       {: report_fatal_error("Require at least one statement in if body/else body.", exleft); :}
+                     ;
+
+stmt_list ::= stmt_list_nonempty:lst
+              {: RESULT = lst; :}
+            | /* epsilon */
+              {: RESULT = new LinkedList<Stmt>(); :}
+            ;
+
+stmt ::= IF LPAR exp:cond RPAR LBRACE stmt_list_nonempty:ifb RBRACE ELSE LBRACE stmt_list_nonempty:elseb RBRACE
+         {: RESULT = new IfElseStmt(cond, ifb, elseb); :}
+       | WHILE LPAR exp:cond RPAR LBRACE stmt_list:body RBRACE
+         {: RESULT = new WhileStmt(cond, body); :}
+       | READLN LPAR IDENTIFIER:name RPAR SEMICOLON
+         {: RESULT = new ReadlnStmt(new Identifier(name)); :}
+       | PRINTLN LPAR exp:e RPAR SEMICOLON
+         {: RESULT = new PrintlnStmt(e); :}
+       | IDENTIFIER:name ASSIGN exp:e SEMICOLON
+         {: RESULT = new AssignStmt(new Identifier(name), e); :}
+       | atom:a DOT IDENTIFIER:name ASSIGN exp:e SEMICOLON
+         {: RESULT = new AssignStmt(new Access(a, new Identifier(name)), e); :}
+       | atom:a LPAR exp_list:lst RPAR SEMICOLON
+         {: RESULT = new MethodCallStmt(a, lst); :}
+       | RETURN exp:e SEMICOLON
+         {: RESULT = new ReturnStmt(e); :}
+       | RETURN SEMICOLON
+         {: RESULT = new ReturnStmt(); :}
+       ;
+
+exp ::= exp:l OR exp:r
+        {: RESULT = new BinaryOpLogical(Operator.OR, l, r); check_binaryop(RESULT, Operator.OR, rxright); :}
+      | exp:l AND exp:r
+        {: RESULT = new BinaryOpLogical(Operator.AND, l, r); check_binaryop(RESULT, Operator.AND, rxright); :}
+      | exp:l LT exp:r
+        {: RESULT = new BinaryOpComp(Operator.LT, l, r); check_binaryop(RESULT, Operator.LT, rxright); :}
+      | exp:l GT exp:r
+        {: RESULT = new BinaryOpComp(Operator.GT, l, r); check_binaryop(RESULT, Operator.GT, rxright); :}
+      | exp:l LEQ exp:r
+        {: RESULT = new BinaryOpComp(Operator.LEQ, l, r); check_binaryop(RESULT, Operator.LEQ, rxright); :}
+      | exp:l GEQ exp:r
+        {: RESULT = new BinaryOpComp(Operator.GEQ, l, r); check_binaryop(RESULT, Operator.GEQ, rxright); :}
+      | exp:l EQ exp:r
+        {: RESULT = new BinaryOpComp(Operator.EQ, l, r); check_binaryop(RESULT, Operator.EQ, rxright); :}
+      | exp:l NEQ exp:r
+        {: RESULT = new BinaryOpComp(Operator.NEQ, l, r); check_binaryop(RESULT, Operator.NEQ, rxright); :}
+      | exp:l PLUS exp:r
+        {: if (l instanceof BinaryOpString || l instanceof StringLiteral ||
+               r instanceof BinaryOpString || r instanceof StringLiteral) {
+             RESULT = new BinaryOpString(Operator.PLUS, l, r);
+           } else {/* For now, categorized Atom+Atom as BinaryOpArithmetic */
+             RESULT = new BinaryOpArithmetic(Operator.PLUS, l, r);
+           }
+           check_binaryop(RESULT, Operator.PLUS, rxright);
+        :}
+      | exp:l MINUS exp:r
+        {: RESULT = new BinaryOpArithmetic(Operator.MINUS, l, r); check_binaryop(RESULT, Operator.MINUS, rxright); :}
+      | exp:l TIMES exp:r
+        {: RESULT = new BinaryOpArithmetic(Operator.TIMES, l, r); check_binaryop(RESULT, Operator.TIMES, rxright); :}
+      | exp:l DIV exp:r
+        {: RESULT = new BinaryOpArithmetic(Operator.DIV, l, r); check_binaryop(RESULT, Operator.DIV, rxright); :}
+      | MINUS exp:e
+        {: RESULT = new UnaryOpArithmetic(Operator.MINUS, e); check_unaryop(RESULT, Operator.MINUS, exright); :}
+        %prec UMINUS
+      | NOT exp:e
+        {: RESULT = new UnaryOpLogical(Operator.NOT, e); check_unaryop(RESULT, Operator.NOT, exright); :}
+      | BOOLEAN_LITERAL:v
+        {: RESULT = new BooleanLiteral(v); :}
+      | INTEGER_LITERAL:v
+        {: RESULT = new IntegerLiteral(v); :}
+      | STRING_LITERAL:v
+        {: RESULT = new StringLiteral(v); :}
+      | atom:a
+        {: RESULT = a; :}
+      | error:e
+        {: report_fatal_error("Expect an expression here, encountered nothing.", exleft); :}
+      ;
+
+atom ::= atom:a DOT IDENTIFIER:name
+         {: RESULT = new Access(a, new Identifier(name)); :}
+       | atom:a LPAR exp_list:lst RPAR
+         {: RESULT = new MethodCall(a, lst); :}
+       | THIS
+         {: RESULT = new This(); :}
+       | IDENTIFIER:name
+         {: RESULT = new Identifier(name); :}
+       | NEW CNAME:cname LPAR RPAR
+         {: RESULT = new New(cname); :}
+       | LPAR exp:e RPAR
+         {: RESULT = new ParenthesizedExp(e); :}
+       | NULL
+         {: RESULT = new Null(); :}
+       ;
+
+exp_list ::= exp:e exp_rest_list:lst
+             {: lst.add(0, e); RESULT = lst; :}
+           | /* epsilon */
+             {: RESULT = new LinkedList<Expression>(); :}
+           ;
+
+exp_rest_list ::= exp_rest_list:lst exp_rest:e
+                  {: lst.add(e); RESULT = lst; :}
+                | /* epsilon */
+                  {: RESULT = new LinkedList<Expression>(); :}
+                ;
+
+exp_rest ::= COMMA exp:e
+             {: RESULT = e; :}
+           ;

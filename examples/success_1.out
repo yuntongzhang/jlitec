@@ -1,0 +1,47 @@
+class Another_Main{
+  Void main(Void void_fml,String sTR){
+    File fd;
+    Surface sur;
+    Readln(fd);
+    sur=[[new Surface()].contain([[new Line()].contain([new Particle()])])];
+    sur.transform();
+    Println((-)[([[sur,2](*),3](+))]);
+  }
+}
+
+class Surface{
+  Bool needToTransform;
+
+  Void transform(){
+    If((((((!)[needToTransform])))))
+    {
+      Return;
+    }
+    else
+    {
+      needToTransform=false;
+    }
+    While((((((!)[needToTransform])))))
+    {
+      Return;
+    }
+  }
+
+  Surface contain(Line line){
+    Return this;
+  }
+
+}
+
+class Line{
+
+  Line contain(Particle particle){
+    Return this;
+  }
+
+}
+
+class Particle{
+
+}
+

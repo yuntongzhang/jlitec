@@ -1,0 +1,83 @@
+class YetAnotherMain{
+  Void main(){
+    While(true)
+    {
+    }
+  }
+}
+
+class Demo{
+  String a;
+  String b;
+  String c;
+
+  String manipulateString(){
+    a=""
+    	
+    -W	}";
+    b=null;
+    c="how\about\this";
+    c=[a,c](+);
+    c=[c,b](+);
+    Return c;
+  }
+
+  Void precedence(Int one,Int two,Int three,Int four){
+    Return [[two,[(-)[one],1](-)](>=),[[(!)[false],[three,[2,3](*)](==)](&&),[[[[4,[four,5](/)](+),6](-),7](+),[[new Demo()],8](*)](<)](&&)](||);
+  }
+
+  Bool blocks(){
+    Bool i;
+    Bool j;
+    If(true)
+    {
+      If((!)[false])
+      {
+        If(i)
+        {
+          While(j)
+          {
+            While((!)[i])
+            {
+            }
+          }
+        }
+        else
+        {
+          If(j)
+          {
+            Return i;
+          }
+          else
+          {
+            Return j;
+          }
+        }
+      }
+      else
+      {
+        If(j)
+        {
+          Return true;
+        }
+        else
+        {
+          Return false;
+        }
+      }
+    }
+    else
+    {
+      While([[i,j](&&),false](||))
+      {
+        While([[(!)[j],(!)[i]](&&),true](&&))
+        {
+          Return j;
+        }
+      }
+    }
+    Return false;
+  }
+
+}
+
