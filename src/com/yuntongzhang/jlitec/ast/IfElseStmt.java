@@ -14,6 +14,18 @@ public class IfElseStmt extends Stmt {
         this.elseBranch = elseBranch;
     }
 
+    public Expression getCondition() {
+        return condition;
+    }
+
+    public List<Stmt> getIfBranch() {
+        return ifBranch;
+    }
+
+    public List<Stmt> getElseBranch() {
+        return elseBranch;
+    }
+
     @Override
     public void prettyPrint(int indentation) {
         String ifLine = ("If(" + condition.toString() + ")").indent(indentation);

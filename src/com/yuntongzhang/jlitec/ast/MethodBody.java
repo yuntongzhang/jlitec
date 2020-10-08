@@ -13,6 +13,14 @@ public class MethodBody extends Node implements PrettyPrintable {
         this.stmts = stmts;
     }
 
+    public List<VarDeclaration> getVarDeclarations() {
+        return varDeclarations;
+    }
+
+    public List<Stmt> getStmts() {
+        return stmts;
+    }
+
     @Override
     public void prettyPrint(int indentation) {
         String varDeclStrings = varDeclarations.stream()

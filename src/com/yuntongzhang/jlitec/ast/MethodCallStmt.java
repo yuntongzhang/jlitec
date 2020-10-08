@@ -13,6 +13,14 @@ public class MethodCallStmt extends Stmt {
         this.expressionList = expressionList;
     }
 
+    public Atom getAtom() {
+        return atom;
+    }
+
+    public List<Expression> getExpressionList() {
+        return expressionList;
+    }
+
     @Override
     public void prettyPrint(int indentation) {
         String expListString = expressionList.stream()

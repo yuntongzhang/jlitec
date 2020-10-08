@@ -10,6 +10,14 @@ public class AssignStmt extends Stmt {
         this.rhs = rhs;
     }
 
+    public Atom getLhs() {
+        return lhs;
+    }
+
+    public Expression getRhs() {
+        return rhs;
+    }
+
     @Override
     public void prettyPrint(int indentation) {
         String toPrint = (lhs.toString() + "=" + rhs.toString() + ";").indent(indentation);

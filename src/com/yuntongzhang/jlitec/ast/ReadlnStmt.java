@@ -8,6 +8,10 @@ public class ReadlnStmt extends Stmt {
         this.arg = arg;
     }
 
+    public Identifier getArg() {
+        return arg;
+    }
+
     @Override
     public void prettyPrint(int indentation) {
         String toPrint = ("Readln(" + arg.toString() + ");").indent(indentation);

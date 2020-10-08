@@ -104,7 +104,7 @@ nonterminal VarDeclaration           var_decl;
 nonterminal List<VarDeclaration>     var_decl_list;
 nonterminal MethodDeclaration        method_decl;
 nonterminal List<MethodDeclaration>  method_decl_list;
-nonterminal Type                     type;
+nonterminal SType                    type;
 nonterminal Stmt                     stmt;
 nonterminal List<Stmt>               stmt_list, stmt_list_nonempty;
 nonterminal Expression               exp, exp_rest;
@@ -184,16 +184,16 @@ fml_rest ::= COMMA type:t IDENTIFIER:name
              {: RESULT = new FmlItem(t, new Identifier(name, astLoc(namexleft)), astLoc(txleft)); :}
            ;
 
-type ::= TYPE_INT:t
-         {: RESULT = new Type("Int", astLoc(txleft)); :}
-       | TYPE_BOOL:t
-         {: RESULT = new Type("Bool", astLoc(txleft)); :}
-       | TYPE_STRING:t
-         {: RESULT = new Type("String", astLoc(txleft)); :}
-       | TYPE_VOID:t
-         {: RESULT = new Type("Void", astLoc(txleft)); :}
+type ::= TYPE_INT
+         {: RESULT = new SType("Int"); :}
+       | TYPE_BOOL
+         {: RESULT = new SType("Bool"); :}
+       | TYPE_STRING
+         {: RESULT = new SType("String"); :}
+       | TYPE_VOID
+         {: RESULT = new SType("Void"); :}
        | CNAME:cname
-         {: RESULT = new Type(cname, astLoc(cnamexleft)); :}
+         {: RESULT = new SType(cname); :}
        ;
 
 stmt_list_nonempty ::= stmt:s

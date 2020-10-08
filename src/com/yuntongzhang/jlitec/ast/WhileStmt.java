@@ -12,6 +12,14 @@ public class WhileStmt extends Stmt {
         this.body = body;
     }
 
+    public Expression getCondition() {
+        return condition;
+    }
+
+    public List<Stmt> getBody() {
+        return body;
+    }
+
     @Override
     public void prettyPrint(int indentation) {
         String one = ("While(" + condition.toString() + ")").indent(indentation);

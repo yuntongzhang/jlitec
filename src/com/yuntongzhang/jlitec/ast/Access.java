@@ -10,6 +10,14 @@ public class Access extends Atom {
         this.id = id;
     }
 
+    public Atom getAtom() {
+        return atom;
+    }
+
+    public Identifier getId() {
+        return id;
+    }
+
     @Override
     public String toString() {
         return atom.toString() + "." + id.toString();

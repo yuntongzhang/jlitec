@@ -1,13 +1,17 @@
 package com.yuntongzhang.jlitec.ast;
 
 public class VarDeclaration extends Node {
-    private Type type;
+    private SType type;
     private Identifier id;
 
-    public VarDeclaration(Type type, Identifier id, Node.Location loc) {
+    public VarDeclaration(SType type, Identifier id, Node.Location loc) {
         super(loc);
         this.type = type;
         this.id = id;
+    }
+
+    public SType getType() {
+        return type;
     }
 
     public Identifier getId() {

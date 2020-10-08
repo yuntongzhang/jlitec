@@ -12,6 +12,14 @@ public abstract class BinaryOperation extends Expression {
         this.rightOperand = right;
     }
 
+    public Expression getLeftOperand() {
+        return leftOperand;
+    }
+
+    public Expression getRightOperand() {
+        return rightOperand;
+    }
+
     public boolean checkOperands() {
         return checkOneOperand(leftOperand) && checkOneOperand(rightOperand);
     }

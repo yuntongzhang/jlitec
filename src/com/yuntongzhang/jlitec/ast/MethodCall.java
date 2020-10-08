@@ -13,6 +13,14 @@ public class MethodCall extends Atom {
         this.expressionList = expressionList;
     }
 
+    public Atom getAtom() {
+        return atom;
+    }
+
+    public List<Expression> getExpressionList() {
+        return expressionList;
+    }
+
     @Override
     public String toString() {
         String expListString = expressionList.stream()

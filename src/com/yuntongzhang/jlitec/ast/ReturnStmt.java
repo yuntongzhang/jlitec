@@ -15,6 +15,19 @@ public class ReturnStmt extends Stmt {
         this.expression = Optional.of(exp);
     }
 
+    public boolean hasReturnValue() {
+        return expression.isPresent();
+    }
+
+    // should always check hasReturnValue before calling this
+    public Expression getReturnValue() {
+        if (expression.isEmpty()) {
+            return null;
+        } else {
+            return expression.get();
+        }
+    }
+
     @Override
     public void prettyPrint(int indentation) {
         String toPrint = "";

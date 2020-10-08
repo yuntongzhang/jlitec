@@ -10,6 +10,10 @@ public abstract class UnaryOperation extends Expression {
         this.operand = operand;
     }
 
+    public Expression getOperand() {
+        return operand;
+    }
+
     public abstract boolean checkOperand();
 
     @Override

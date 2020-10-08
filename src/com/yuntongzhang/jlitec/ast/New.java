@@ -8,6 +8,10 @@ public class New extends Atom {
         this.className = cname;
     }
 
+    public String getClassName() {
+        return className;
+    }
+
     @Override
     public String toString() {
         return "[new " + className + "()]";

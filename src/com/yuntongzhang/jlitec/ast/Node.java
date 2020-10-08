@@ -11,6 +11,10 @@ public abstract class Node {
         this.loc = loc;
     }
 
+    public Location getLoc() {
+        return loc;
+    }
+
     public static class Location {
         private int line;
         private int column;
