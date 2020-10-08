@@ -1,10 +1,11 @@
 package com.yuntongzhang.jlitec.ast;
 
-public class AssignStmt implements Stmt {
+public class AssignStmt extends Stmt {
     private Atom lhs;
     private Expression rhs;
 
-    public AssignStmt(Atom lhs, Expression rhs) {
+    public AssignStmt(Atom lhs, Expression rhs, Node.Location loc) {
+        super(loc);
         this.lhs = lhs;
         this.rhs = rhs;
     }

@@ -1,7 +1,8 @@
 package com.yuntongzhang.jlitec.ast;
 
 public class Null extends Atom {
-    public Null() {
+    public Null(Node.Location loc) {
+        super(loc);
     }
 
     @Override

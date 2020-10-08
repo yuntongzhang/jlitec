@@ -3,11 +3,12 @@ package com.yuntongzhang.jlitec.ast;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MethodBody implements PrettyPrintable {
+public class MethodBody extends Node implements PrettyPrintable {
     private List<VarDeclaration> varDeclarations;
     private List<Stmt> stmts;
 
-    public MethodBody(List<VarDeclaration> varDeclarations, List<Stmt> stmts) {
+    public MethodBody(List<VarDeclaration> varDeclarations, List<Stmt> stmts, Node.Location loc) {
+        super(loc);
         this.varDeclarations = varDeclarations;
         this.stmts = stmts;
     }

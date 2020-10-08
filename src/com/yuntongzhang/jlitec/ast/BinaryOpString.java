@@ -1,8 +1,8 @@
 package com.yuntongzhang.jlitec.ast;
 
 public class BinaryOpString extends BinaryOperation {
-    public BinaryOpString(Operator operator, Expression left, Expression right) {
-        super(operator, left, right);
+    public BinaryOpString(Operator operator, Expression left, Expression right, Node.Location loc) {
+        super(operator, left, right, loc);
     }
 
     @Override

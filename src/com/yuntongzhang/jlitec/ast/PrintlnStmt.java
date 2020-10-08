@@ -1,9 +1,10 @@
 package com.yuntongzhang.jlitec.ast;
 
-public class PrintlnStmt implements Stmt {
+public class PrintlnStmt extends Stmt {
     private Expression arg;
 
-    public PrintlnStmt(Expression arg) {
+    public PrintlnStmt(Expression arg, Node.Location loc) {
+        super(loc);
         this.arg = arg;
     }
 

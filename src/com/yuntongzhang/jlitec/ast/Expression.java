@@ -1,5 +1,7 @@
 package com.yuntongzhang.jlitec.ast;
 
-public interface Expression {
-
+public abstract class Expression extends Node {
+    public Expression(Node.Location loc) {
+        super(loc);
+    }
 }

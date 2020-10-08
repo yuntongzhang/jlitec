@@ -3,12 +3,13 @@ package com.yuntongzhang.jlitec.ast;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MainClass implements PrettyPrintable{
+public class MainClass extends Node implements PrettyPrintable {
     private String cname;
     private List<FmlItem> fmlList;
     private MethodBody methodBody;
 
-    public MainClass(String cname, List<FmlItem> fmlList, MethodBody methodBody) {
+    public MainClass(String cname, List<FmlItem> fmlList, MethodBody methodBody, Node.Location loc) {
+        super(loc);
         this.cname = cname;
         this.fmlList = fmlList;
         this.methodBody = methodBody;

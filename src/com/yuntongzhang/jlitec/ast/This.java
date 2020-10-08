@@ -1,7 +1,8 @@
 package com.yuntongzhang.jlitec.ast;
 
 public class This extends Atom {
-    public This() {
+    public This(Node.Location loc) {
+        super(loc);
     }
 
     @Override

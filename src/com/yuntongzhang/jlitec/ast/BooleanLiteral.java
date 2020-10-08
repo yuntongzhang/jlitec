@@ -1,9 +1,10 @@
 package com.yuntongzhang.jlitec.ast;
 
-public class BooleanLiteral implements Expression {
+public class BooleanLiteral extends Expression {
     private boolean value;
 
-    public BooleanLiteral(boolean value) {
+    public BooleanLiteral(boolean value, Node.Location loc) {
+        super(loc);
         this.value = value;
     }
 

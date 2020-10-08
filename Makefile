@@ -18,8 +18,8 @@ $(SRC_DIR)/Lexer.java : $(SRC_DIR)/jlite.flex
 $(SRC_DIR)/Parser.java : $(SRC_DIR)/jlite.cup
 	java -jar $(CUP_JAR) -destdir $(SRC_DIR) -parser Parser -interface -locations $^
 
-compile : $(SRC_DIR)/ast/*.java $(SRC_DIR)/*.java
-	javac -cp $(CUP_RUNTIME) -d $(BUILD_DIR) $(SRC_DIR)/ast/*.java $(SRC_DIR)/*.java
+compile : $(SRC_DIR)/*/*.java $(SRC_DIR)/*.java
+	javac -cp $(CUP_RUNTIME) -d $(BUILD_DIR) $(SRC_DIR)/*/*.java $(SRC_DIR)/*.java
 
 
 # Usage: make run IN=<input-file> [OUT=<output-file>]

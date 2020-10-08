@@ -3,3 +3,8 @@
 
 *.class
 build/
+
+# generated from JFlex and CUP
+Lexer.java
+Parser.java
+sym.java

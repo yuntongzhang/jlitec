@@ -7,7 +7,8 @@ public class MethodCall extends Atom {
     private Atom atom;
     private List<Expression> expressionList;
 
-    public MethodCall(Atom atom, List<Expression> expressionList) {
+    public MethodCall(Atom atom, List<Expression> expressionList, Node.Location loc) {
+        super(loc);
         this.atom = atom;
         this.expressionList = expressionList;
     }

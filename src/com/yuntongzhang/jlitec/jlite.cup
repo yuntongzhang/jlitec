@@ -8,6 +8,10 @@ import java_cup.runtime.ComplexSymbolFactory.*;
 
 
 action code {:
+    Node.Location astLoc(Location loc) {
+        return new Node.Location(loc.getLine(), loc.getColumn());
+    }
+
     void check_binaryop(Expression result, Operator operator, Location loc) throws Exception {
         BinaryOperation binaryOp = (BinaryOperation) result;
         if (!binaryOp.checkOperands()) {
@@ -123,15 +127,15 @@ precedence left     DOT;
 
 /* grammar */
 program ::= main_class:main class_decl_list:clst
-            {: RESULT = new Program(main, clst); :}
+            {: RESULT = new Program(main, clst, astLoc(mainxleft)); :}
           ;
 
-main_class ::= CLASS CNAME:cname LBRACE TYPE_VOID MAIN LPAR fml_list:flst RPAR method_body:body RBRACE
-               {: RESULT = new MainClass(cname, flst, body); :}
+main_class ::= CLASS:c CNAME:cname LBRACE TYPE_VOID MAIN LPAR fml_list:flst RPAR method_body:body RBRACE
+               {: RESULT = new MainClass(cname, flst, body, astLoc(cxleft)); :}
              ;
 
-class_decl ::= CLASS CNAME:cname LBRACE var_decl_list:vlst method_decl_list:mlst RBRACE
-               {: RESULT = new ClassDeclaration(cname, vlst, mlst); :}
+class_decl ::= CLASS:c CNAME:cname LBRACE var_decl_list:vlst method_decl_list:mlst RBRACE
+               {: RESULT = new ClassDeclaration(cname, vlst, mlst, astLoc(cxleft)); :}
              ;
 
 class_decl_list ::= class_decl_list:lst class_decl:cdecl
@@ -141,7 +145,7 @@ class_decl_list ::= class_decl_list:lst class_decl:cdecl
                   ;
 
 var_decl ::= type:t IDENTIFIER:name SEMICOLON
-             {: RESULT = new VarDeclaration(t, new Identifier(name)); :}
+             {: RESULT = new VarDeclaration(t, new Identifier(name, astLoc(namexleft)), astLoc(txleft)); :}
            ;
 
 var_decl_list ::= var_decl_list:lst var_decl:vdecl
@@ -151,7 +155,7 @@ var_decl_list ::= var_decl_list:lst var_decl:vdecl
                 ;
 
 method_decl ::= type:t IDENTIFIER:name LPAR fml_list:flst RPAR method_body:body
-                {: RESULT = new MethodDeclaration(t, new Identifier(name), flst, body); :}
+                {: RESULT = new MethodDeclaration(t, new Identifier(name, astLoc(namexleft)), flst, body, astLoc(txleft)); :}
               ;
 
 method_decl_list ::= method_decl:mdecl method_decl_list:lst
@@ -160,12 +164,12 @@ method_decl_list ::= method_decl:mdecl method_decl_list:lst
                      {: RESULT = new LinkedList<MethodDeclaration>(); :}
                    ;
 
-method_body ::= LBRACE var_decl_list:vlst stmt_list_nonempty:slst RBRACE
-                {: RESULT = new MethodBody(vlst, slst); :}
+method_body ::= LBRACE:l var_decl_list:vlst stmt_list_nonempty:slst RBRACE
+                {: RESULT = new MethodBody(vlst, slst, astLoc(lxleft)); :}
               ;
 
 fml_list ::= type:t IDENTIFIER:name fml_rest_list:lst
-             {: lst.add(0, new FmlItem(t, new Identifier(name))); RESULT = lst; :}
+             {: lst.add(0, new FmlItem(t, new Identifier(name, astLoc(namexleft)), astLoc(txleft))); RESULT = lst; :}
            | /* epsilon */
              {: RESULT = new LinkedList<FmlItem>(); :}
            ;
@@ -177,19 +181,19 @@ fml_rest_list ::= fml_rest_list:lst fml_rest:item
                 ;
 
 fml_rest ::= COMMA type:t IDENTIFIER:name
-             {: RESULT = new FmlItem(t, new Identifier(name)); :}
+             {: RESULT = new FmlItem(t, new Identifier(name, astLoc(namexleft)), astLoc(txleft)); :}
            ;
 
-type ::= TYPE_INT
-         {: RESULT = new Type("Int"); :}
-       | TYPE_BOOL
-         {: RESULT = new Type("Bool"); :}
-       | TYPE_STRING
-         {: RESULT = new Type("String"); :}
-       | TYPE_VOID
-         {: RESULT = new Type("Void"); :}
+type ::= TYPE_INT:t
+         {: RESULT = new Type("Int", astLoc(txleft)); :}
+       | TYPE_BOOL:t
+         {: RESULT = new Type("Bool", astLoc(txleft)); :}
+       | TYPE_STRING:t
+         {: RESULT = new Type("String", astLoc(txleft)); :}
+       | TYPE_VOID:t
+         {: RESULT = new Type("Void", astLoc(txleft)); :}
        | CNAME:cname
-         {: RESULT = new Type(cname); :}
+         {: RESULT = new Type(cname, astLoc(cnamexleft)); :}
        ;
 
 stmt_list_nonempty ::= stmt:s
@@ -206,88 +210,88 @@ stmt_list ::= stmt_list_nonempty:lst
               {: RESULT = new LinkedList<Stmt>(); :}
             ;
 
-stmt ::= IF LPAR exp:cond RPAR LBRACE stmt_list_nonempty:ifb RBRACE ELSE LBRACE stmt_list_nonempty:elseb RBRACE
-         {: RESULT = new IfElseStmt(cond, ifb, elseb); :}
-       | WHILE LPAR exp:cond RPAR LBRACE stmt_list:body RBRACE
-         {: RESULT = new WhileStmt(cond, body); :}
-       | READLN LPAR IDENTIFIER:name RPAR SEMICOLON
-         {: RESULT = new ReadlnStmt(new Identifier(name)); :}
-       | PRINTLN LPAR exp:e RPAR SEMICOLON
-         {: RESULT = new PrintlnStmt(e); :}
-       | IDENTIFIER:name ASSIGN exp:e SEMICOLON
-         {: RESULT = new AssignStmt(new Identifier(name), e); :}
-       | atom:a DOT IDENTIFIER:name ASSIGN exp:e SEMICOLON
-         {: RESULT = new AssignStmt(new Access(a, new Identifier(name)), e); :}
+stmt ::= IF:i LPAR exp:cond RPAR LBRACE stmt_list_nonempty:ifb RBRACE ELSE LBRACE stmt_list_nonempty:elseb RBRACE
+         {: RESULT = new IfElseStmt(cond, ifb, elseb, astLoc(ixleft)); :}
+       | WHILE:w LPAR exp:cond RPAR LBRACE stmt_list:body RBRACE
+         {: RESULT = new WhileStmt(cond, body, astLoc(wxleft)); :}
+       | READLN:r LPAR IDENTIFIER:name RPAR SEMICOLON
+         {: RESULT = new ReadlnStmt(new Identifier(name, astLoc(namexleft)), astLoc(rxleft)); :}
+       | PRINTLN:p LPAR exp:e RPAR SEMICOLON
+         {: RESULT = new PrintlnStmt(e, astLoc(pxleft)); :}
+       | IDENTIFIER:name ASSIGN:a exp:e SEMICOLON
+         {: RESULT = new AssignStmt(new Identifier(name, astLoc(namexleft)), e, astLoc(axleft)); :}
+       | atom:a DOT:d IDENTIFIER:name ASSIGN:as exp:e SEMICOLON
+         {: RESULT = new AssignStmt(new Access(a, new Identifier(name, astLoc(namexleft)), astLoc(dxleft)), e, astLoc(asxleft)); :}
        | atom:a LPAR exp_list:lst RPAR SEMICOLON
-         {: RESULT = new MethodCallStmt(a, lst); :}
-       | RETURN exp:e SEMICOLON
-         {: RESULT = new ReturnStmt(e); :}
-       | RETURN SEMICOLON
-         {: RESULT = new ReturnStmt(); :}
+         {: RESULT = new MethodCallStmt(a, lst, astLoc(axleft)); :}
+       | RETURN:r exp:e SEMICOLON
+         {: RESULT = new ReturnStmt(e, astLoc(rxleft)); :}
+       | RETURN:r SEMICOLON
+         {: RESULT = new ReturnStmt(astLoc(rxleft)); :}
        ;
 
-exp ::= exp:l OR exp:r
-        {: RESULT = new BinaryOpLogical(Operator.OR, l, r); check_binaryop(RESULT, Operator.OR, rxright); :}
-      | exp:l AND exp:r
-        {: RESULT = new BinaryOpLogical(Operator.AND, l, r); check_binaryop(RESULT, Operator.AND, rxright); :}
-      | exp:l LT exp:r
-        {: RESULT = new BinaryOpComp(Operator.LT, l, r); check_binaryop(RESULT, Operator.LT, rxright); :}
-      | exp:l GT exp:r
-        {: RESULT = new BinaryOpComp(Operator.GT, l, r); check_binaryop(RESULT, Operator.GT, rxright); :}
-      | exp:l LEQ exp:r
-        {: RESULT = new BinaryOpComp(Operator.LEQ, l, r); check_binaryop(RESULT, Operator.LEQ, rxright); :}
-      | exp:l GEQ exp:r
-        {: RESULT = new BinaryOpComp(Operator.GEQ, l, r); check_binaryop(RESULT, Operator.GEQ, rxright); :}
-      | exp:l EQ exp:r
-        {: RESULT = new BinaryOpComp(Operator.EQ, l, r); check_binaryop(RESULT, Operator.EQ, rxright); :}
-      | exp:l NEQ exp:r
-        {: RESULT = new BinaryOpComp(Operator.NEQ, l, r); check_binaryop(RESULT, Operator.NEQ, rxright); :}
-      | exp:l PLUS exp:r
+exp ::= exp:l OR:o exp:r
+        {: RESULT = new BinaryOpLogical(Operator.OR, l, r, astLoc(oxleft)); check_binaryop(RESULT, Operator.OR, rxright); :}
+      | exp:l AND:o exp:r
+        {: RESULT = new BinaryOpLogical(Operator.AND, l, r, astLoc(oxleft)); check_binaryop(RESULT, Operator.AND, rxright); :}
+      | exp:l LT:o exp:r
+        {: RESULT = new BinaryOpComp(Operator.LT, l, r, astLoc(oxleft)); check_binaryop(RESULT, Operator.LT, rxright); :}
+      | exp:l GT:o exp:r
+        {: RESULT = new BinaryOpComp(Operator.GT, l, r, astLoc(oxleft)); check_binaryop(RESULT, Operator.GT, rxright); :}
+      | exp:l LEQ:o exp:r
+        {: RESULT = new BinaryOpComp(Operator.LEQ, l, r, astLoc(oxleft)); check_binaryop(RESULT, Operator.LEQ, rxright); :}
+      | exp:l GEQ:o exp:r
+        {: RESULT = new BinaryOpComp(Operator.GEQ, l, r, astLoc(oxleft)); check_binaryop(RESULT, Operator.GEQ, rxright); :}
+      | exp:l EQ:o exp:r
+        {: RESULT = new BinaryOpComp(Operator.EQ, l, r, astLoc(oxleft)); check_binaryop(RESULT, Operator.EQ, rxright); :}
+      | exp:l NEQ:o exp:r
+        {: RESULT = new BinaryOpComp(Operator.NEQ, l, r, astLoc(oxleft)); check_binaryop(RESULT, Operator.NEQ, rxright); :}
+      | exp:l PLUS:o exp:r
         {: if (l instanceof BinaryOpString || l instanceof StringLiteral ||
                r instanceof BinaryOpString || r instanceof StringLiteral) {
-             RESULT = new BinaryOpString(Operator.PLUS, l, r);
+             RESULT = new BinaryOpString(Operator.PLUS, l, r, astLoc(oxleft));
            } else {/* For now, categorized Atom+Atom as BinaryOpArithmetic */
-             RESULT = new BinaryOpArithmetic(Operator.PLUS, l, r);
+             RESULT = new BinaryOpArithmetic(Operator.PLUS, l, r, astLoc(oxleft));
            }
            check_binaryop(RESULT, Operator.PLUS, rxright);
         :}
-      | exp:l MINUS exp:r
-        {: RESULT = new BinaryOpArithmetic(Operator.MINUS, l, r); check_binaryop(RESULT, Operator.MINUS, rxright); :}
-      | exp:l TIMES exp:r
-        {: RESULT = new BinaryOpArithmetic(Operator.TIMES, l, r); check_binaryop(RESULT, Operator.TIMES, rxright); :}
-      | exp:l DIV exp:r
-        {: RESULT = new BinaryOpArithmetic(Operator.DIV, l, r); check_binaryop(RESULT, Operator.DIV, rxright); :}
-      | MINUS exp:e
-        {: RESULT = new UnaryOpArithmetic(Operator.MINUS, e); check_unaryop(RESULT, Operator.MINUS, exright); :}
+      | exp:l MINUS:o exp:r
+        {: RESULT = new BinaryOpArithmetic(Operator.MINUS, l, r, astLoc(oxleft)); check_binaryop(RESULT, Operator.MINUS, rxright); :}
+      | exp:l TIMES:o exp:r
+        {: RESULT = new BinaryOpArithmetic(Operator.TIMES, l, r, astLoc(oxleft)); check_binaryop(RESULT, Operator.TIMES, rxright); :}
+      | exp:l DIV:o exp:r
+        {: RESULT = new BinaryOpArithmetic(Operator.DIV, l, r, astLoc(oxleft)); check_binaryop(RESULT, Operator.DIV, rxright); :}
+      | MINUS:o exp:e
+        {: RESULT = new UnaryOpArithmetic(Operator.MINUS, e, astLoc(oxleft)); check_unaryop(RESULT, Operator.MINUS, exright); :}
         %prec UMINUS
-      | NOT exp:e
-        {: RESULT = new UnaryOpLogical(Operator.NOT, e); check_unaryop(RESULT, Operator.NOT, exright); :}
+      | NOT:o exp:e
+        {: RESULT = new UnaryOpLogical(Operator.NOT, e, astLoc(oxleft)); check_unaryop(RESULT, Operator.NOT, exright); :}
       | BOOLEAN_LITERAL:v
-        {: RESULT = new BooleanLiteral(v); :}
+        {: RESULT = new BooleanLiteral(v, astLoc(vxleft)); :}
       | INTEGER_LITERAL:v
-        {: RESULT = new IntegerLiteral(v); :}
+        {: RESULT = new IntegerLiteral(v, astLoc(vxleft)); :}
       | STRING_LITERAL:v
-        {: RESULT = new StringLiteral(v); :}
+        {: RESULT = new StringLiteral(v, astLoc(vxleft)); :}
       | atom:a
         {: RESULT = a; :}
       | error:e
         {: report_fatal_error("Expect an expression here, encountered nothing.", exleft); :}
       ;
 
-atom ::= atom:a DOT IDENTIFIER:name
-         {: RESULT = new Access(a, new Identifier(name)); :}
+atom ::= atom:a DOT:d IDENTIFIER:name
+         {: RESULT = new Access(a, new Identifier(name, astLoc(namexleft)), astLoc(dxleft)); :}
        | atom:a LPAR exp_list:lst RPAR
-         {: RESULT = new MethodCall(a, lst); :}
-       | THIS
-         {: RESULT = new This(); :}
+         {: RESULT = new MethodCall(a, lst, astLoc(axleft)); :}
+       | THIS:t
+         {: RESULT = new This(astLoc(txleft)); :}
        | IDENTIFIER:name
-         {: RESULT = new Identifier(name); :}
-       | NEW CNAME:cname LPAR RPAR
-         {: RESULT = new New(cname); :}
-       | LPAR exp:e RPAR
-         {: RESULT = new ParenthesizedExp(e); :}
-       | NULL
-         {: RESULT = new Null(); :}
+         {: RESULT = new Identifier(name, astLoc(namexleft)); :}
+       | NEW:n CNAME:cname LPAR RPAR
+         {: RESULT = new New(cname, astLoc(nxleft)); :}
+       | LPAR:l exp:e RPAR
+         {: RESULT = new ParenthesizedExp(e, astLoc(lxleft)); :}
+       | NULL:n
+         {: RESULT = new Null(astLoc(nxleft)); :}
        ;
 
 exp_list ::= exp:e exp_rest_list:lst

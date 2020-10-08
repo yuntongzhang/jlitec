@@ -2,14 +2,16 @@ package com.yuntongzhang.jlitec.ast;
 
 import java.util.Optional;
 
-public class ReturnStmt implements Stmt {
+public class ReturnStmt extends Stmt {
     private Optional<Expression> expression;
 
-    public ReturnStmt() {
+    public ReturnStmt(Node.Location loc) {
+        super(loc);
         this.expression = Optional.empty();
     }
 
-    public ReturnStmt(Expression exp) {
+    public ReturnStmt(Expression exp, Node.Location loc) {
+        super(loc);
         this.expression = Optional.of(exp);
     }
 

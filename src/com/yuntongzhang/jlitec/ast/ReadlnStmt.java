@@ -1,9 +1,10 @@
 package com.yuntongzhang.jlitec.ast;
 
-public class ReadlnStmt implements Stmt {
+public class ReadlnStmt extends Stmt {
     private Identifier arg;
 
-    public ReadlnStmt(Identifier arg) {
+    public ReadlnStmt(Identifier arg, Node.Location loc) {
+        super(loc);
         this.arg = arg;
     }
 

@@ -3,11 +3,12 @@ package com.yuntongzhang.jlitec.ast;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MethodCallStmt implements Stmt {
+public class MethodCallStmt extends Stmt {
     private Atom atom;
     private List<Expression> expressionList;
 
-    public MethodCallStmt(Atom atom, List<Expression> expressionList) {
+    public MethodCallStmt(Atom atom, List<Expression> expressionList, Node.Location loc) {
+        super(loc);
         this.atom = atom;
         this.expressionList = expressionList;
     }

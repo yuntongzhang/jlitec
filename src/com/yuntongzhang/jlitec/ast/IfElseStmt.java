@@ -2,12 +2,13 @@ package com.yuntongzhang.jlitec.ast;
 
 import java.util.List;
 
-public class IfElseStmt implements Stmt {
+public class IfElseStmt extends Stmt {
     private Expression condition;
     private List<Stmt> ifBranch;
     private List<Stmt> elseBranch;
 
-    public IfElseStmt(Expression condition, List<Stmt> ifBranch, List<Stmt> elseBranch) {
+    public IfElseStmt(Expression condition, List<Stmt> ifBranch, List<Stmt> elseBranch, Node.Location loc) {
+        super(loc);
         this.condition = condition;
         this.ifBranch = ifBranch;
         this.elseBranch = elseBranch;

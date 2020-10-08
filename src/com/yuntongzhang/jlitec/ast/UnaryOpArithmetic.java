@@ -1,8 +1,8 @@
 package com.yuntongzhang.jlitec.ast;
 
 public class UnaryOpArithmetic extends UnaryOperation {
-    public UnaryOpArithmetic(Operator operator, Expression operand) {
-        super(operator, operand);
+    public UnaryOpArithmetic(Operator operator, Expression operand, Node.Location loc) {
+        super(operator, operand, loc);
     }
 
     @Override

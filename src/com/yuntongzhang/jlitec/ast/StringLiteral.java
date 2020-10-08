@@ -1,9 +1,10 @@
 package com.yuntongzhang.jlitec.ast;
 
-public class StringLiteral implements Expression {
+public class StringLiteral extends Expression {
     private String value;
 
-    public StringLiteral(String value) {
+    public StringLiteral(String value, Node.Location loc) {
+        super(loc);
         this.value = value;
     }
 

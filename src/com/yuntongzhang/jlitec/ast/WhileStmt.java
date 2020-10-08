@@ -2,11 +2,12 @@ package com.yuntongzhang.jlitec.ast;
 
 import java.util.List;
 
-public class WhileStmt implements Stmt {
+public class WhileStmt extends Stmt {
     private Expression condition;
     private List<Stmt> body;
 
-    public WhileStmt(Expression condition, List<Stmt> body) {
+    public WhileStmt(Expression condition, List<Stmt> body, Node.Location loc) {
+        super(loc);
         this.condition = condition;
         this.body = body;
     }

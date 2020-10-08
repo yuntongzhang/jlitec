@@ -1,9 +1,10 @@
 package com.yuntongzhang.jlitec.ast;
 
-public class Type {
+public class Type extends Node {
     private String name;
 
-    public Type(String name) {
+    public Type(String name, Node.Location loc) {
+        super(loc);
         this.name = name;
     }
 
