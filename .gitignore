@@ -1,6 +1,7 @@
 .DS_STORE
 .idea/
 
+# build files
 *.class
 build/
 
@@ -8,3 +9,6 @@ build/
 Lexer.java
 Parser.java
 sym.java
+
+# output files from processing inputs
+*.out
