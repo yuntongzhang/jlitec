@@ -12,7 +12,6 @@ import com.yuntongzhang.jlitec.exceptions.TypeError;
 
 
 public class TypeChecker {
-    // TODO: handle cases for NULL
     // primitive types used in type checking
     private static final SType intType = new SType("Int");
     private static final SType stringType = new SType("String");
@@ -30,6 +29,7 @@ public class TypeChecker {
     }
 
     public void check() throws SemanticError {
+        checkClass(program.getMainClass());
         for (ClassDeclaration classDeclaration : program.getClassDeclarations()) {
             checkClass(classDeclaration);
         }
@@ -59,7 +59,8 @@ public class TypeChecker {
         // check return type
         SType checkedReturnType = checkMethodBody(methodDeclaration.getMethodBody());
         if (!checkedReturnType.equals(funcType.getReturnType())) {
-            // TODO: throw exception
+            throw new TypeError("Type of last statement in method does not match with the return type!",
+                    methodDeclaration.getLoc());
         }
         // after checking a method, pop the current env created for this method
         env = env.popEnv();
@@ -106,11 +107,8 @@ public class TypeChecker {
             } else if (assignLhs instanceof Access) {
                 Access assignLhsAccess = (Access) assignLhs;
                 Atom accessLhs = assignLhsAccess.getAtom();
-                Type accessLhsType = checkAtom(accessLhs);
-                if (!(accessLhsType instanceof SType)) { // method.__ is not allowed
-                    throw new TypeError("LHS of Access cannot be a method!", accessLhs.getLoc());
-                }
-                String accessLhsClassName = ((SType) accessLhsType).getName();
+                SType accessLhsType = checkAtom(accessLhs);
+                String accessLhsClassName = accessLhsType.getName();
                 String accessRhsName = assignLhsAccess.getId().getName();
                 if (!classDescriptor.classContainsField(accessLhsClassName, accessRhsName)) {
                     throw new NameNotFoundError("The name \"" + accessRhsName + "\" is not found in class \""
@@ -119,9 +117,24 @@ public class TypeChecker {
                 Map<String, SType> fields = classDescriptor.getFieldsForClass(accessLhsClassName, null);
                 // confirm can find the wanted field
                 lhsType = fields.get(accessRhsName);
+            } else {
+                // other kind of lhs for assignment is not allowed
+                throw new TypeError("Invalid assign statement LHS!", assignStmt.getLoc());
             }
             // Now, get RHS type and compare with LHS type
-            Type rhsType = checkExpression(assignStmt.getRhs());
+            Expression assignRhs = assignStmt.getRhs();
+            Type rhsType;
+            if (assignRhs instanceof Null) {
+                // SPECIAL: RHS of assignment is null
+                if (lhsType.isNullable()) {
+                    rhsType = lhsType;
+                    assignRhs.checkedType = lhsType;
+                } else {
+                    throw new TypeError(lhsType.getName() + " type cannot be null!", assignRhs.getLoc());
+                }
+            } else {
+                rhsType = checkExpression(assignStmt.getRhs());
+            }
             if (!lhsType.equals(rhsType)) {
                 throw new TypeError("LHS and RHS of assignment need to have same type!", assignStmt.getLoc());
             }
@@ -169,7 +182,16 @@ public class TypeChecker {
         // [Print]
         if (statement instanceof PrintlnStmt) {
             PrintlnStmt printlnStmt = (PrintlnStmt) statement;
-            Type argType = checkExpression(printlnStmt.getArg());
+            Expression arg = printlnStmt.getArg();
+            Type argType;
+            if (arg instanceof Null) {
+                // null as argument to println should be interpreted as empty String
+                // It is not sensible if null is of other Nullable type
+                argType = stringType;
+                arg.checkedType = stringType;
+            } else {
+                argType = checkExpression(printlnStmt.getArg());
+            }
             if (!intType.equals(argType) && !boolType.equals(argType) && !stringType.equals(argType)) {
                 throw new TypeError("println needs to have argument with Int/Bool/String type!", printlnStmt.getLoc());
             }
@@ -208,6 +230,7 @@ public class TypeChecker {
         throw new SemanticError("This type of statement is not recognized!", statement.getLoc());
     }
 
+    // methodCallLhs will be checked into a FuncType, thus not calling checkAtom on it
     private SType checkMethodCall(Atom methodCallLhs, List<Expression> argList) throws SemanticError {
         // look up the method signature : funcType
         FuncType funcType = null;
@@ -218,11 +241,8 @@ public class TypeChecker {
         } else if (methodCallLhs instanceof Access) {
             Access methodCallLhsAccess = (Access) methodCallLhs;
             Atom accessLhs = methodCallLhsAccess.getAtom(); // can be id or other kinds of Atom
-            Type accessLhsType = checkAtom(accessLhs);
-            if (!(accessLhsType instanceof SType)) { // method.__ is not allowed
-                throw new TypeError("LHS of Access cannot be a method!", accessLhs.getLoc());
-            }
-            String accessLhsClassName = ((SType) accessLhsType).getName();
+            SType accessLhsType = checkAtom(accessLhs);
+            String accessLhsClassName = accessLhsType.getName();
             String accessRhsName = methodCallLhsAccess.getId().getName();
             if (!classDescriptor.classContainsMethod(accessLhsClassName, accessRhsName)) {
                 throw new NameNotFoundError("The name \"" + accessRhsName + "\" is not found in class \""
@@ -235,59 +255,54 @@ public class TypeChecker {
         // Now, check whether the actual argument types follow the looked up funcType
         List<SType> paraTypes = funcType.getParaTypes();
         for (int i = 0; i < paraTypes.size(); i++) {
-            Expression arg = argList.get(i);
-            Type argType = checkExpression(arg);
-            if (!(argType instanceof SType)) {
-                throw new TypeError("Argument in method call cannot be function type!", arg.getLoc());
-            }
+            // type of formal parameter
             SType paraType = paraTypes.get(i);
-            if (!paraType.equals((SType) argType)) {
+            // type of actual argument
+            Expression arg = argList.get(i);
+            Type argType;
+            if (arg instanceof Null) {
+                // SPECIAL: actual argument is null
+                if (paraType.isNullable()) {
+                    argType = paraType;
+                    arg.checkedType = paraType;
+                } else {
+                    throw new TypeError(paraType.getName() + " type cannot be null!", arg.getLoc());
+                }
+            } else {
+                argType = checkExpression(arg);
+            }
+
+            if (!paraType.equals(argType)) {
                 throw new TypeError("Method call has argument with wrong type!", arg.getLoc());
             }
         }
         return funcType.getReturnType();
     }
 
-    private Type checkAtom(Atom atom) throws SemanticError {
-        // [Id]
-        if (atom instanceof Identifier) {
-            // TODO: might need to consider that Identifier can be for method
-            Identifier id = (Identifier) atom;
-            return env.lookupVar(id.getName(), id.getLoc());
+    // This method saves the checked type
+    private SType checkAtom(Atom atom) throws SemanticError {
+        SType result = null;
+
+        // type of a Null atom cannot be inferred from it alone
+        // it has to be determined from the context
+        // Thus, the context should set the Null atom's checkedType
+        // Contexts (also called the allowable places) to consider:
+        // (1) Null as argument to method call
+        // (2) Null as argument to println
+        // (3) Null as the RHS of assignment
+        // (4) Null as operand to +, where Null is of String Type
+
+        // To handle null, I make the allowable places to handle null by itself,
+        // and the unallowable places to call the normal Expresson/Atom routine,
+        // with the normal routine for null to signal error
+        if (atom instanceof Null) {
+            throw new TypeError("Null is not allowed in this context!", atom.getLoc());
         }
 
-        // [Id]
-        if (atom instanceof This) {
-            return env.lookupVar("this", atom.getLoc());
-        }
-
-        // [Field]
-        if (atom instanceof Access) {
-            Access access = (Access) atom;
-            Type checkedLType = checkAtom(access.getAtom());
-            // in Access, lhs cannot be a method name (lhs cannot be FuncType)
-            if (!(checkedLType instanceof SType)) {
-                throw new TypeError("LHS of Access cannot be a method!", access.getLoc());
-            }
-            SType lType = (SType) checkedLType;
-            String cname = lType.getName();
-            // TODO: remove comment below
-            // rhs of Access can be a field OR method
-            String rhsName = access.getId().getName();
-            if (classDescriptor.classContainsField(cname, rhsName)) {
-                // rhs of Access is a field
-                Map<String, SType> fields = classDescriptor.getFieldsForClass(cname, null);
-                return fields.get(rhsName);
-//            } else if (classDescriptor.classContainsMethod(cname, rhsName)) {
-//                // rhs of Access is a method
-//                Map<String, FuncType> methods = classDescriptor.getMethodsForClass(cname, null);
-//                return methods.get(rhsName);
-            } else {
-                // TODO: fix comment below
-                // rhs is neither field or method, throw Error
-                throw new NameNotFoundError("The name \"" + rhsName + "\" is not found in class \"" + cname + "\".",
-                        access.getId().getLoc());
-            }
+        if (atom instanceof ParenthesizedExp) {
+            ParenthesizedExp parenthesizedExp = (ParenthesizedExp) atom;
+            Expression insideExpression = parenthesizedExp.getExpression();
+            result = checkExpression(insideExpression);
         }
 
         // [New]
@@ -298,46 +313,112 @@ public class TypeChecker {
                 throw new NameNotFoundError("The declaration of class name \"" + cname + "\" is not found.",
                         n.getLoc());
             }
-            return new SType(cname);
+            result = new SType(cname);
+        }
+
+        // [Id]
+        if (atom instanceof Identifier) {
+            // if Identifier is for a method, it is consider at other places instead of here
+            Identifier id = (Identifier) atom;
+            result = env.lookupVar(id.getName(), id.getLoc());
+        }
+
+        // [Id]
+        if (atom instanceof This) {
+            result = env.lookupVar("this", atom.getLoc());
         }
 
         // [LocalCall]
         // [GlobalCall]
         if (atom instanceof MethodCall) {
             MethodCall methodCall = (MethodCall) atom;
-            return checkMethodCall(methodCall.getAtom(), methodCall.getExpressionList());
+            result = checkMethodCall(methodCall.getAtom(), methodCall.getExpressionList());
         }
 
-        throw new SemanticError("This type of atom is not recognized!", atom.getLoc());
+        // [Field]
+        // object.method is not considered, since it is considered in the method call case
+        if (atom instanceof Access) {
+            Access access = (Access) atom;
+            SType lType = checkAtom(access.getAtom());
+            String cname = lType.getName();
+            String rhsName = access.getId().getName();
+            // rhs of Access can only possibly be a field here
+            if (classDescriptor.classContainsField(cname, rhsName)) {
+                Map<String, SType> fields = classDescriptor.getFieldsForClass(cname, null);
+                result = fields.get(rhsName);
+            } else {
+                // rhs is not a field (not found)
+                throw new NameNotFoundError("The name \"" + rhsName + "\" is not found in class \"" + cname + "\".",
+                        access.getId().getLoc());
+            }
+        }
+
+        // save checked type
+        atom.checkedType = result;
+        return result;
     }
 
-    private Type checkExpression(Expression expression) throws SemanticError {
+    // This method saves the checked type
+    private SType checkExpression(Expression expression) throws SemanticError {
+        SType result = null;
+
         if (expression instanceof Atom) {
-            return checkAtom((Atom) expression);
+            result = checkAtom((Atom) expression);
         }
 
         // [Integers]
         if (expression instanceof IntegerLiteral) {
-            return intType;
+            result = intType;
         }
 
         // [Booleans]
         if (expression instanceof BooleanLiteral) {
-            return boolType;
+            result = boolType;
+        }
+
+        if (expression instanceof StringLiteral) {
+            result = stringType;
         }
 
         // [Arith]
+        // [String]
         if (expression instanceof BinaryOpArithmetic) {
-            // TODO: remove the partial type checks in parser
             BinaryOpArithmetic arith = (BinaryOpArithmetic) expression;
+            Operator operator = arith.getOperator();
             Expression left = arith.getLeftOperand();
-            Type leftType = checkExpression(left);
             Expression right = arith.getRightOperand();
-            Type rightType = checkExpression(right);
-            if (!(intType.equals(leftType)) || !(intType.equals(rightType))) {
-                throw new TypeError("Both operands of arithmetic expression need to be Int type!", arith.getLoc());
+            Type leftType;
+            Type rightType;
+            // Consider the null SPECIAL case first
+            if (left instanceof Null) {
+                leftType = stringType;
+                left.checkedType = stringType;
+            } else {
+                leftType = checkExpression(left);
             }
-            return intType;
+            if (right instanceof Null) {
+                rightType = stringType;
+                right.checkedType = stringType;
+            } else {
+                rightType = checkExpression(right);
+            }
+            // Now consider + and other operators separately
+            if (operator == Operator.PLUS) {
+                // either allow (1) both operands are Int type; (2) both operands are String type
+                if (intType.equals(leftType) && intType.equals(rightType)) {
+                    result = intType;
+                } else if (stringType.equals(leftType) && stringType.equals(rightType)) {
+                    result = stringType;
+                } else { // invalid operand types
+                    throw new TypeError("Invalid operand types for the operator +", arith.getLoc());
+                }
+            } else {
+                // do the normal [Arith] check
+                if (!(intType.equals(leftType)) || !(intType.equals(rightType))) {
+                    throw new TypeError("Both operands of arithmetic expression need to be Int type!", arith.getLoc());
+                }
+                result = intType;
+            }
         }
 
         // [Negation]
@@ -348,20 +429,7 @@ public class TypeChecker {
             if (!(intType.equals(operandType))) {
                 throw new TypeError("Arithmetic negation need to have operand of Int type!", arith.getLoc());
             }
-            return intType;
-        }
-
-        // [String]
-        if (expression instanceof BinaryOpString) {
-            BinaryOpString strOp = (BinaryOpString) expression;
-            Expression left = strOp.getLeftOperand();
-            Type leftType = checkExpression(left);
-            Expression right = strOp.getRightOperand();
-            Type rightType = checkExpression(right);
-            if (!(stringType.equals(leftType)) || !(stringType.equals(rightType))) {
-                throw new TypeError("Both operands of string concatenation need to be String type!", strOp.getLoc());
-            }
-            return stringType;
+            result = intType;
         }
 
         // [Rel]
@@ -374,7 +442,7 @@ public class TypeChecker {
             if (!(intType.equals(leftType)) || !(intType.equals(rightType))) {
                 throw new TypeError("Both operands of relational expression need to be Int type!", comp.getLoc());
             }
-            return boolType;
+            result = boolType;
         }
 
         // [Bool]
@@ -387,7 +455,7 @@ public class TypeChecker {
             if (!(boolType.equals(leftType)) || !(boolType.equals(rightType))) {
                 throw new TypeError("Both operands of boolean expression need to be Bool type!", logical.getLoc());
             }
-            return boolType;
+            result = boolType;
         }
 
         // [Complement]
@@ -398,9 +466,11 @@ public class TypeChecker {
             if (!(boolType.equals(operandType))) {
                 throw new TypeError("Logical complement need to have operand of Bool type!", logical.getLoc());
             }
-            return boolType;
+            result = boolType;
         }
 
-        throw new SemanticError("This type of expression is not recognized!", expression.getLoc());
+        // save checked type
+        expression.checkedType = result;
+        return result;
     }
 }

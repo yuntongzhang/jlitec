@@ -7,6 +7,8 @@ import com.yuntongzhang.jlitec.check.DistinctNameChecker;
 import com.yuntongzhang.jlitec.check.TypeChecker;
 import com.yuntongzhang.jlitec.exceptions.NonDistinctNameError;
 import com.yuntongzhang.jlitec.exceptions.SemanticError;
+import com.yuntongzhang.jlitec.ir3.Ir3Gen;
+import com.yuntongzhang.jlitec.ir3.Program3;
 
 import java_cup.runtime.ComplexSymbolFactory;
 
@@ -35,12 +37,17 @@ public class Main {
             Program result = (Program) p.parse().value;
             new DistinctNameChecker(result).check();
             new TypeChecker(result).check();
-            result.prettyPrint(0);
+//            result.prettyPrint(0);
+            Program3 ir3Result = new Ir3Gen(result).gen();
+            ir3Result.prettyPrint(0);
         } catch (IOException e) {
             System.err.println("An I/O error occurred while parsing : \n" + e);
             System.exit(1);
         } catch (SemanticError e) {
             System.err.println("Semantic error in program : \n" + e);
+            System.exit(1);
+        } catch (Exception e) {
+            System.err.println("Error happened when processing the input program : \n" + e);
             System.exit(1);
         }
     }

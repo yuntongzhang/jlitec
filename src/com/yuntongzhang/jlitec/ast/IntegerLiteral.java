@@ -8,6 +8,10 @@ public class IntegerLiteral extends Expression {
         this.value = value;
     }
 
+    public int getValue() {
+        return value;
+    }
+
     @Override
     public String toString() {
         return Integer.toString(value);

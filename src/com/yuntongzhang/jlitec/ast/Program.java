@@ -13,6 +13,10 @@ public class Program extends Node implements PrettyPrintable {
         this.classDeclarations = classDeclarations;
     }
 
+    public MainClass getMainClass() {
+        return mainClass;
+    }
+
     public List<ClassDeclaration> getClassDeclarations() {
         return classDeclarations;
     }

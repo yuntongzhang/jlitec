@@ -8,6 +8,10 @@ public class ParenthesizedExp extends Atom {
         this.expression = expression;
     }
 
+    public Expression getExpression() {
+        return expression;
+    }
+
     @Override
     public String toString() {
         return "(" + expression.toString() + ")";

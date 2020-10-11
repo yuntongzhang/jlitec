@@ -21,6 +21,10 @@ public class MethodDeclaration extends Node implements PrettyPrintable {
         this.funcType = new FuncType(fmlList, returnType);
     }
 
+    public SType getReturnType() {
+        return returnType;
+    }
+
     public Identifier getId() {
         return id;
     }

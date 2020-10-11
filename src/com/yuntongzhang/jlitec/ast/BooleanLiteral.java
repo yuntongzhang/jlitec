@@ -8,6 +8,14 @@ public class BooleanLiteral extends Expression {
         this.value = value;
     }
 
+    public boolean isTrue() {
+        return value;
+    }
+
+    public boolean getValue() {
+        return value;
+    }
+
     @Override
     public String toString() {
         return Boolean.toString(value);

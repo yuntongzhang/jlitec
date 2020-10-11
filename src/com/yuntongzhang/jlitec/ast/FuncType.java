@@ -9,12 +9,6 @@ public class FuncType extends Type {
     private List<SType> paraTypes;
     private SType returnType;
 
-    // TODO: remove
-    public FuncType(SType returnType, List<SType> paraTypes) {
-        this.paraTypes = paraTypes;
-        this.returnType = returnType;
-    }
-
     public FuncType(List<FmlItem> fmlList, SType returnType) {
         List<SType> paraTypes = fmlList.stream().map(f -> f.getType()).collect(Collectors.toList());
         this.paraTypes = paraTypes;

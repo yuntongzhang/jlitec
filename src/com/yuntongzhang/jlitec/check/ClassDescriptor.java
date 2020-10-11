@@ -18,24 +18,30 @@ public class ClassDescriptor {
     }
 
     private void initialize(Program program) {
-        // TODO: how about main class?
+        // main class
+        initializeClass(program.getMainClass());
+        // other class declarations
         for (ClassDeclaration classDeclaration : program.getClassDeclarations()) {
-            String cname = classDeclaration.getCname();
-            Map<String, SType> fields = new HashMap<>();
-            Map<String, FuncType> methods = new HashMap<>();
-            for (VarDeclaration varDeclaration : classDeclaration.getVarDeclarations()) {
-                String name = varDeclaration.getId().getName();
-                SType stype = varDeclaration.getType();
-                fields.put(name, stype);
-            }
-            for (MethodDeclaration methodDeclaration : classDeclaration.getMethodDeclarations()) {
-                String name = methodDeclaration.getId().getName();
-                FuncType funcType = methodDeclaration.getFuncType();
-                methods.put(name, funcType);
-            }
-            Description description = new Description(cname, fields, methods);
-            this.classes.put(cname, description);
+            initializeClass(classDeclaration);
         }
+    }
+
+    private void initializeClass(ClassDeclaration classDeclaration) {
+        String cname = classDeclaration.getCname();
+        Map<String, SType> fields = new HashMap<>();
+        Map<String, FuncType> methods = new HashMap<>();
+        for (VarDeclaration varDeclaration : classDeclaration.getVarDeclarations()) {
+            String name = varDeclaration.getId().getName();
+            SType stype = varDeclaration.getType();
+            fields.put(name, stype);
+        }
+        for (MethodDeclaration methodDeclaration : classDeclaration.getMethodDeclarations()) {
+            String name = methodDeclaration.getId().getName();
+            FuncType funcType = methodDeclaration.getFuncType();
+            methods.put(name, funcType);
+        }
+        Description description = new Description(cname, fields, methods);
+        this.classes.put(cname, description);
     }
 
     public boolean containsClass(String cname) {

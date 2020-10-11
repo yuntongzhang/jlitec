@@ -41,7 +41,6 @@ public class DistinctNameChecker {
         List<MethodDeclaration> methodDeclarations = classDeclaration.getMethodDeclarations();
         List<String> methodNames = methodDeclarations.stream().map(m -> m.getId().getName()).collect(Collectors.toList());
         // check all methods in a class have distinct names
-        // TODO: allow method overloading
         if (methodNames.size() != new HashSet<>(methodNames).size()) {
             throw new NonDistinctNameError("Class has methods with duplicated names!", classDeclaration.getLoc());
         }

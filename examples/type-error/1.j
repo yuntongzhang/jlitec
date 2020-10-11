@@ -1,18 +1,12 @@
 /* Test the following:
- *  - Report failure with duplicated field names in a class
+ *  - type error when last statement in method body has diff type compared to the method return type.
  **/
 
 class Another_Main {
     Void main(Void void_fml, String sTR) {
-        File fd;
-        Surface sur;
-
-        readln(fd);
-        sur = new Surface().contain(new Line().contain(new Particle()));
-        sur.transform();
-        println(-(sur * 2 + 3));
+        String a;
+        a = sTR;
     }
-
 }
 
 class Surface {
@@ -29,18 +23,12 @@ class Surface {
         }
     }
 
-    Surface contain(Line line) {
+    String notRight() {
+        String a;
+        a = "b";
+    }
+
+    Surface contain(Void nothing) {
         return this;
     }
-}
-
-class Line {
-    Line contain(Particle particle) {
-        return this;
-    }
-}
-
-class Particle {
-    Int x;
-    String x;
 }

@@ -15,6 +15,10 @@ public class SType extends Type {
         return name;
     }
 
+    public boolean isNullable() {
+        return (!name.equals("Int") && !name.equals("Bool") && !name.equals("Void"));
+    }
+
     @Override
     public String toString() {
         return name;

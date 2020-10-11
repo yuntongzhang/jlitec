@@ -1,18 +1,12 @@
 /* Test the following:
- *  - Report failure with duplicated class names
+ *  - type error when if/else branches have diff type
  **/
 
 class Another_Main {
     Void main(Void void_fml, String sTR) {
-        File fd;
-        Surface sur;
-
-        readln(fd);
-        sur = new Surface().contain(new Line().contain(new Particle()));
-        sur.transform();
-        println(-(sur * 2 + 3));
+        String a;
+        a = sTR;
     }
-
 }
 
 class Surface {
@@ -29,17 +23,19 @@ class Surface {
         }
     }
 
-    Surface contain(Line line) {
+    Void notRight(Void v) {
+        if (needToTransform) {
+            contain(v); // type is Surface
+        } else {
+            return;    // type is Void
+        }
+    }
+
+    Surface contain(Void nothing) {
         return this;
     }
 }
 
 class Line {
-    Line contain(Particle particle) {
-        return this;
-    }
-}
-
-class Surface {
-
+    String name;
 }
