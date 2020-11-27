@@ -22,14 +22,15 @@ compile : $(SRC_DIR)/*/*.java $(SRC_DIR)/*.java
 	javac -cp $(CUP_RUNTIME) -d $(BUILD_DIR) $(SRC_DIR)/*/*.java $(SRC_DIR)/*.java
 
 
-# Usage: make run IN=<input-file> [OUT=<output-file>]
+# Usage: make run ARGS="[-O] <input-file>" [OUT=<output-file>]
 # OUT=<output-file> is optional; if not specified, output to stdout
-run :
+run:
 ifdef OUT
-	java -cp $(CUP_RUNTIME):$(BUILD_DIR) $(MAIN_CLASS) $(IN) > $(OUT)
+	java -cp $(CUP_RUNTIME):$(BUILD_DIR) $(MAIN_CLASS) $(ARGS) > $(OUT)
 else
-	java -cp $(CUP_RUNTIME):$(BUILD_DIR) $(MAIN_CLASS) $(IN)
+	java -cp $(CUP_RUNTIME):$(BUILD_DIR) $(MAIN_CLASS) $(ARGS)
 endif
+
 
 clean :
 	rm -rf $(BUILD_DIR)

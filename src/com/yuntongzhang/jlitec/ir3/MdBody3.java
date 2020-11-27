@@ -9,12 +9,23 @@ import com.yuntongzhang.jlitec.ast.PrettyPrintable;
 import com.yuntongzhang.jlitec.ast.VarDeclaration;
 
 public class MdBody3 implements PrettyPrintable {
-    private List<VarDecl3> varDecl3List;
-    private List<Stmt3> stmt3List;
+    private List<Stmt3> stmt3List = new ArrayList<>();
 
     public MdBody3(List<VarDeclaration> varDeclarations, List<Stmt3> stmt3List) {
-        this.varDecl3List = genVarDecl3List(varDeclarations);
-        this.stmt3List = eliminateUnusedLabels(stmt3List);
+        this.stmt3List.addAll(genVarDecl3List(varDeclarations));
+        this.stmt3List.addAll(eliminateUnusedLabels(stmt3List));
+    }
+
+    public MdBody3(List<Stmt3> insList) {
+        this.stmt3List = insList;
+    }
+
+    /**
+     * Returns all stmts, including var declarations.
+     */
+    public List<Stmt3> getAllStmts() {
+        List<Stmt3> result = new ArrayList<>(stmt3List);
+        return result;
     }
 
     private List<VarDecl3> genVarDecl3List(List<VarDeclaration> varDeclarations) {
@@ -53,9 +64,6 @@ public class MdBody3 implements PrettyPrintable {
 
     @Override
     public void prettyPrint(int indentation) {
-        for (VarDecl3 varDecl3 : varDecl3List) {
-            varDecl3.prettyPrint(indentation);
-        }
         for (Stmt3 stmt3 : stmt3List) {
             stmt3.prettyPrint(indentation);
         }

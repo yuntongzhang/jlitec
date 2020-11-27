@@ -9,6 +9,13 @@ public class New3 extends Exp3 {
         this.cname = n.getClassName();
     }
 
+    public String getCname() {
+        return cname;
+    }
+
+    // new takes object reference as equals and hashcode
+    // since different instances of null should not be considered in CSE
+
     @Override
     public String toString() {
         return "new " + cname + "()";

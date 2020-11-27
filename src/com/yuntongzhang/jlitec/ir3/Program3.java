@@ -13,6 +13,14 @@ public class Program3 implements PrettyPrintable {
         this.methodList = methodList;
     }
 
+    public List<CData3> getDataList() {
+        return dataList;
+    }
+
+    public List<CMtd3> getMethodList() {
+        return methodList;
+    }
+
     @Override
     public void prettyPrint(int indentation) {
         System.out.println("======================== CData3 ========================");

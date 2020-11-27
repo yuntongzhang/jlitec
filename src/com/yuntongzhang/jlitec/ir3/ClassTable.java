@@ -39,7 +39,7 @@ public class ClassTable {
             int counter = 0;
             for (MethodDeclaration methodDeclaration : classDeclaration.getMethodDeclarations()) {
                 String methodName = methodDeclaration.getId().getName();
-                String translatedMethodName = "%" + cname + "_" + counter;
+                String translatedMethodName = cname + "_" + counter;
                 methodList.add(new MethodPair(methodName, translatedMethodName));
                 counter++;
             }

@@ -19,6 +19,22 @@ public class CMtd3 implements PrettyPrintable {
         this.methodBody = methodBody;
     }
 
+    public Id3 getMethodName() {
+        return methodName;
+    }
+
+    public List<FmlItem3> getFmlList() {
+        return fmlList;
+    }
+
+    public MdBody3 getMethodBody() {
+        return methodBody;
+    }
+
+    public void setMethodBody(MdBody3 methodBody) {
+        this.methodBody = methodBody;
+    }
+
     @Override
     public void prettyPrint(int indentation) {
         String fmlListString = fmlList.stream()

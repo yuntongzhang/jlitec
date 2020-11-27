@@ -1,5 +1,9 @@
 package com.yuntongzhang.jlitec.ir3;
 
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
 import com.yuntongzhang.jlitec.ast.Identifier;
 
 public class Id3 extends Idc3 {
@@ -30,7 +34,27 @@ public class Id3 extends Idc3 {
     }
 
     @Override
+    public Set<Id3> getAllVariables() {
+        Set<Id3> result = new HashSet<>();
+        result.add(this);
+        return result;
+    }
+
+    @Override
     public String toString() {
         return name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Id3 id3 = (Id3) o;
+        return name.equals(id3.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
     }
 }

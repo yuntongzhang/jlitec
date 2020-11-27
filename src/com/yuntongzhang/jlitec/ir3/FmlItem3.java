@@ -18,6 +18,14 @@ public class FmlItem3 {
         this.id = new Id3(); // "this"
     }
 
+    public Type3 getType() {
+        return type;
+    }
+
+    public Id3 getId() {
+        return id;
+    }
+
     @Override
     public String toString() {
         return type.toString() + " " + id.toString();

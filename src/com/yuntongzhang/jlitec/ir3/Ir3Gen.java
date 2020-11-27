@@ -188,6 +188,13 @@ public class Ir3Gen {
             result.addAll(translateAtomForValue(lhsAccessLhs)); //lhsAccessLhs.idc3 set
             result.addAll(translateExpForValue(rhs)); // rhs.idc set
             result.add(new AssignAccess3((Id3) lhsAccessLhs.idc3, new Id3(lhsAccessRhs), rhs.idc3));
+        } else if (lhs instanceof Identifier
+                && classTable.isAFieldForClass(currentClassContext, ((Identifier) lhs).getName())) {
+            // field = ..., need to add `this` in front
+            Id3 fieldId = new Id3((Identifier) lhs);
+            Id3 thisId = new Id3();
+            result.addAll(translateExpForValue(rhs));
+            result.add(new AssignAccess3(thisId, fieldId, rhs.idc3));
         } else {
             result.addAll(translateAtomForValue(lhs)); // lhs.idc3 set
             result.addAll(translateExpForValue(rhs)); // rhs.idc3 set

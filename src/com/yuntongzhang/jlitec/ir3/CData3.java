@@ -18,6 +18,14 @@ public class CData3 implements PrettyPrintable {
         }
     }
 
+    public String getCname() {
+        return cname;
+    }
+
+    public List<VarDecl3> getVarDecl3List() {
+        return varDecl3List;
+    }
+
     @Override
     public void prettyPrint(int indentation) {
         String begin = "Data " + cname + " {".indent(indentation);
